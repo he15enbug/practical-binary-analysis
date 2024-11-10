@@ -114,3 +114,39 @@
 #### The ELF Format
 
 - ELF is used for executable files, object files, shared libs, and core dumps.
+
+## Chapter 2: The ELF Format
+
+- **The Executable and Linkable Format, ELF**: the default binary format on Linux-based systems
+- In essence, ELF binaries consist of 4 types of components:
+  1. An *executable header*
+  2. A series of (optional) *program headers*
+  3. A number of *sections*
+  4. A series of (optional) *section headers*, one per section
+
+### The Executable Header
+
+- To find out what the format of the executable header is, we can look up its type definition (and the definitions of other ELF-related types and cconstants) in `/usr/include/elf.h` or the ELF specification
+
+#### The `e_ident` Array
+
+#### The `e_type`, `e_machine`, and `e_version` Fields
+
+#### The `e_entry` Field
+
+#### The `e_phoff` and `e_shoff` Fields
+
+#### The `e_flags` Field
+
+#### The `e_ehsize` Field
+
+#### The `e_*entsize` and `e_*num` Fields
+
+#### The `e_shstrndx` Field
+
+### Section Heeaders
+
+### Sections
+
+#### Program Headers
+
