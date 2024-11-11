@@ -130,6 +130,49 @@
 
 #### The `e_ident` Array
 
+- A 16-byte array.
+- Starts with a 4-byte magic value identifying the file as an ELF binary (`0x7f, 'E', 'L', 'F'`).
+- A number of bytes that give more info about the specifics of the type of ELF file. In `elf.h`, the indexes for these bytes (indexes 4 through 15 in the `e_ident` array) are symbolically referred to as `EI_CLASS`, `EI_DATA`, `EI_VERSION`, `EI_OSABI`, `EI_ABIVERSION`, and `EI_PAD`, respectively.
+
+    ```
+    +---------+ 0
+    |   0x7f  |
+    |---------| 1
+    |    E    |
+    |---------| 2
+    |    L    |
+    |---------| 3
+    |    F    |
+    |---------| EI_CLASS      (4)
+    |         |
+    |---------| EI_DATA       (5)
+    |         |
+    |---------| EI_VERSION    (6)
+    |         |
+    |---------| EIOSABI       (7)
+    |         |
+    |---------| EI_ABIVERSION (8)
+    |         |
+    |---------| EI_PAD        (9)
+    |    0    |
+    |    0    |
+    |    0    |
+    |    0    | Currently designated as padding (7 bytes)
+    |    0    |
+    |    0    |
+    |    0    |
+    +---------+ 15
+    ```
+
+- `EI_CLASS`: denotes whether the binary	is for a 32-bit (value: `ELFCLASS32` (`1`)) or 64-bit (value: `ELFCLASS64` (`2`)) architecture
+- `EI_DATA`: indicates the endianness of the binary:
+  - Little-endian: `ELFDATA2LSB` (`1`)
+  - Big-endian: `ELFDATA2MSB` (`2`)
+- `EI_VERSION`: indicates the version of the ELF spec. used when creating the binary. Currently, only valid value is `EV_CURRENT` (`1`)
+- `EIOSABI`
+- `EI_ABIVERSION`
+- `EI_PAD`
+
 #### The `e_type`, `e_machine`, and `e_version` Fields
 
 #### The `e_entry` Field
