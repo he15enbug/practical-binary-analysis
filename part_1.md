@@ -131,6 +131,7 @@
 #### The `e_ident` Array
 
 - A 16-byte array.
+- Use `readelf -h <FILE_NAME>` to inspect `e_ident` of an ELF binary.
 - Starts with a 4-byte magic value identifying the file as an ELF binary (`0x7f, 'E', 'L', 'F'`).
 - A number of bytes that give more info about the specifics of the type of ELF file. In `elf.h`, the indexes for these bytes (indexes 4 through 15 in the `e_ident` array) are symbolically referred to as `EI_CLASS`, `EI_DATA`, `EI_VERSION`, `EI_OSABI`, `EI_ABIVERSION`, and `EI_PAD`, respectively.
 
@@ -138,18 +139,18 @@
     +---------+ 0
     |   0x7f  |
     |---------| 1
-    |    E    |
+    |   0x45  |     E
     |---------| 2
-    |    L    |
+    |   0x4C  |     L
     |---------| 3
-    |    F    |
+    |   0x46  |     F
     |---------| EI_CLASS      (4)
     |         |
     |---------| EI_DATA       (5)
     |         |
     |---------| EI_VERSION    (6)
     |         |
-    |---------| EIOSABI       (7)
+    |---------| EI_OSABI       (7)
     |         |
     |---------| EI_ABIVERSION (8)
     |         |
@@ -169,25 +170,55 @@
   - Little-endian: `ELFDATA2LSB` (`1`)
   - Big-endian: `ELFDATA2MSB` (`2`)
 - `EI_VERSION`: indicates the version of the ELF spec. used when creating the binary. Currently, only valid value is `EV_CURRENT` (`1`)
-- `EIOSABI`
-- `EI_ABIVERSION`
-- `EI_PAD`
+- `EI_OSABI`: info regarding the ABI (application binary interface) and the OS. **Non-zero value**: some ABI- or OS-specific extensions are used in the ELF file, this can change the meaning of some other fields in the binary or can signal the presence of nonstandard sections. The default value of **zero**: the binary targets the UNIX system V ABI.
+- `EI_ABIVERSION`: ABI version. Usually zero when the default `EI_OSABI` is used.
+- `EI_PAD`: paddings consists of `0x00`.
 
 #### The `e_type`, `e_machine`, and `e_version` Fields
 
+- Multi-byte integer fields
+- `e_type`: the type of the binary, the most common values are: 
+  1. `ET_REL`: a relocatable object file
+  2. `ET_EXEC`: an executable binary
+  3. `ET_DYN`: a dynamic lib, aka. a *shared object file*
+- `e_machine`: the architecture that the binary is intended to run on
+  1. `EM_X86_64`
+  2. `EM_386` (32-bit x86)
+  3. `EM_ARM`
+- `e_version` (4-byte): serves the same role as the `EI_VERSION` byte in `e_ident`. Specifically, it indicates the version of the ELF spec. that was used when creating the binary. Only possible value is 1 (`EV_CURRENT`)
+
 #### The `e_entry` Field
+
+- Denotes the *entry point* of the binary, this is the **virtual address** at which execution should start. Useful starting point for recursive disassembly.
 
 #### The `e_phoff` and `e_shoff` Fields
 
+- Only the executable header need to be located at a fixed location in an ELF binary.
+- `e_phoff`: the *file offset* (i.e., *the number of bytes* we should read into the file to get to the headers) to the beginning of the program header table.
+- `e_shoff`: the offset to the begining of the section header table.
+- Set to `0`: the file doesn't contain a program header or section header table
+- Note that these are *file offsets*, not virtual addresses
+
 #### The `e_flags` Field
+
+- provides room for flags specific to the arch. for which the binary is compiled
+- E.g., ARM binaries intended to run on embedded platforms can set ARM-specific flags in the `e_flags` field to indicate additional details about the interface they expect from the embedded OS (file format conventions, stack organization, and so son). For x86 binaries, `e_flag` is typically set to zero
 
 #### The `e_ehsize` Field
 
+- The size (bytes) of the executable header. For x86 64 binaries, always 64. For x86 32 binaries, it's 52.
+
 #### The `e_*entsize` and `e_*num` Fields
+
+- `e_phentsize`, `e_shentsize`: the size of the individual program or section headers in each table
+- `e_phnum`, `e_shnum`: Provide the number of program or section headers in each table
 
 #### The `e_shstrndx` Field
 
-### Section Heeaders
+- Contains the index (in the section header table) of the header associated with a special *string table* section, called `.shstrtab`. This is a dedicated section that contains a table of null-terminated ASCII strings, which store the names of all the sections in the binary.
+- Show the content of `.shstrtab`: `readelf -x .shstrtab <ELF_FILE>`
+
+### Section Headers
 
 ### Sections
 
