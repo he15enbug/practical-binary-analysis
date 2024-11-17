@@ -293,7 +293,19 @@
 
 ### Sections
 
+- `readelf --sections --wide a.out`
 
+#### The `.init` and `.fini` Sections
+
+- `.init` contains executable code for initialization tasks, run before any other code. The system executes the code in `.init` before transferring control to the main entry point of the bin
+- `.fini` is analogous to `.init`, except that it runs after main program completes
+
+#### The `.text` Section
+
+- Main code of the program resides. Has type `SHT_PROGBITS` b/c it contains user-defined code
+- Executable, not writable. In general, executable sections should almost never be writable b/c that would make it vulnerable
+- `.text` of a typical binary compiled by `gcc` contains a number of standard functions that perform initialization and finalization, such as `_start`, `register_tm_clones`, and `frame_dummy`
+- `_start` will call `__libc_start_main` residing in `.plt` (which means the function is part of a shared lib). `__libc_start_main` will finally call to the address of `main` to begin execution of user-defined code.
 
 #### Program Headers
 
