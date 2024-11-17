@@ -307,6 +307,50 @@
 - `.text` of a typical binary compiled by `gcc` contains a number of standard functions that perform initialization and finalization, such as `_start`, `register_tm_clones`, and `frame_dummy`
 - `_start` will call `__libc_start_main` residing in `.plt` (which means the function is part of a shared lib). `__libc_start_main` will finally call to the address of `main` to begin execution of user-defined code.
 
+#### The `.bss`, `.data` and `.rodata` Sections
+
+- Variables are kept in one or more dedicated sections b/c code sections are generally not writable.
+- Constant data is usually also kept in its own section (modern versions of `gcc` and `clang`), though some compilers do output constant data in code sections (Visual Studio sometimes does)
+- `.rodata`: read-only data, not writable. 
+- The default values of initialized variables are stored in `.data`, which is writable.
+- `.bss` reserves space for uninitialized variables. The name historically stands for *block started by symbol*, referring of blocks of memory for symbolic variables.
+- `.rodata` and `.data` have type `SHT_PROGBITS`, while `.bss` has type `SHT_NOBITS`, because `.bss` doesn't occupy any bytes in the bin as it exists on disk, it's simply a directive to allocate a properly sized block of mem for uninitialized vars when setting up an execution env for the bin
+- Typically, vars in `.bss` are zero initialized, and the section is writable
+
+#### Lazy Binding and the `.plt`, `.got`, and `.got.plt` Sections
+
+##### Lazy Binding and the PLT
+
+- On Linux, lazy binding is the default behavior of the dynamic linker. Force the linker to perform all relocs right away by exporting an env var `LD_BIND_NOW`.
+- Lazy binding in Linux ELF bins is implemented with 2 sections: 
+  1. The *Procedure Linkage Table* (`.plt`)
+  2. The *Global Offset Table* (`.got`)
+- `.got.plt` is a separate GOT section in ELF bins for use in conjunction w/ `.plt` in the lazy binding process
+- `.plt` is a code section
+- `.got.plt` is a data section
+- The PLT consists entirely of stubs of a well-defined format, dedicated to directing calls from the `.text` section to the appropriate lib location.
+- Disassemble the PLT of a binary `objdump -M intel --section .plt -d a.out`
+
+##### Dynamic Resolving a Lib Function Using the PLT
+
+- If we want to call the `puts` function in the `libc` library, instead of calling it directly, we can make a call to the corresponding PLT stub, `puts@plt`.
+- The PLT stub begins with an indirect jump instr., which jumps to an addr. stored in the `.got.plt` section. Initially, before the lazy binding has happened, this address is simply the address of the next instr. in the function stub, which is a `push` instr. Thus, the indirect jump simply transfers control to the instr. directly after it. That's a rather roundabout way of getting to the next instr., but there's a good reason for that.
+- The `push` instr. pushes an integer (in this case, 0x0) onto the stack. This integer serves as an identifier for the PLT stub in question. Subsequently, the next instr. jumps to the common default stub shared among all PLT function stubs
+- The default stub pushes another identifier (taken from the GOT), identifying the executable itself, and then jumps (indirectly, again through the GOT) to the dynamic linker
+- Using the identifiers pushed by the PLT stubs, the dynamic linker figures out that it should resolve the addr. of `puts` and should do so on behalf of the main executable loaded into the process. 
+- The dynamic linker then looks up the addr. at which the `puts` is located and plugs the address of that func. into the GOT entry associated with `puts@plt`
+- Thus, the GOT entry no longer points back into the PLT stub, but now points to the actual addr. of `puts`. At this point, lazying binding process is complete.
+- Finally, the dynamic linker satisfies the original intention of calling `puts` by transferring control to it. For any subsequent calls to `puts@plt`, the GOT entry already contains the appropriate (pathed) addr. of `puts`, so that the jump at the start of the PLT stub goes directly yo `puts` w/o involving the dynamic linker.
+
+##### Why Use a GOT
+
+- Why not patch the resolved lib addr. directly into the code of the PLT stubs?
+- One of the main reasons: **security**. Vulnerabilities in the bin would allow attackers to modify the code of the bin if executable sections like `.plt` were writable. With GOT, this attack model is a lot less powerful (the attacker can change the addresses in the GOT, but can not inject arbitrary code).
+- The other reason has to do with **code shareability in shared libs**. Even though the OS loads only a single physical copy of each lib, the same lib will likely be mapped to a completely different virtual address for each process. The implication is that we cannot patch addresses resolved on behalf of a lib directly into the code because the addr. would **work only in the context of one process** and break the others. Patching them into the GOT instead does work b/c **each process has its own private copy of the GOT**. (This part is not so make much sense to me b/c it doesn't clarify the shareability of the PLT, I'll try to figure it out at a later point)
+- References from the code to relocatable data symbols (such as vars and constants exported from shared libs) also need to be redirected via the GOT to avoid patching data addresses directly into the code. The difference is that data references go directly through the GOT, w/o the intermediate step of the PLT. This also clarifies the destinction between the `.got` and `.got.plt` sections:
+  - `.got` is for refs to data items.
+  - `.got.plt` is for storing resolved addresses for lib functions accessed via the PLT.
+
 #### Program Headers
 
 
