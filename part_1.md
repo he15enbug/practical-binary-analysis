@@ -220,7 +220,81 @@
 
 ### Section Headers
 
+- Sections do NOT have any predetermined structure
+- Every section is described by a *section header*
+- Section header table
+- Sections are intended to provide a convenient organization for use by the linker. The section header table is an optional part of the ELF format
+- Another logical organization: **segments**, which are used at execution time (as opposed to sections, which are used at link time)
+- Format of an ELF section header as specified in `/usr/include/elf.h`
+
+  ```c
+  typedef struct elf64_shdr {
+    Elf64_Word sh_name;		/* Section name, index in string tbl */
+    Elf64_Word sh_type;		/* Type of section */
+    Elf64_Xword sh_flags;		/* Miscellaneous section attributes */
+    Elf64_Addr sh_addr;		/* Section virtual addr at execution */
+    Elf64_Off sh_offset;		/* Section file offset */
+    Elf64_Xword sh_size;		/* Size of section in bytes */
+    Elf64_Word sh_link;		/* Index of another section */
+    Elf64_Word sh_info;		/* Additional section information */
+    Elf64_Xword sh_addralign;	/* Section alignment */
+    Elf64_Xword sh_entsize;	/* Entry size if section holds table */
+  } Elf64_Shdr;
+  ```
+
+#### `sh_name`
+
+- If set, it contains an index into the *string table*
+- If zero, the section doesn't have a name
+
+#### `sh_type`
+
+- Every section has a type
+  - `SHT_PROGBITS`: sections with type `SHT_PROGBITS` contain program data, such as machine instructions or constants. No particular structure for the linker to parse
+  - Types for symbol tables
+    - `SHT_SYMTAB` for static symbol tables
+    - `SHT_DYNSYM` for symbol tables used by the dynamic linker
+    - Symbol tables contain symbols in a well-defined format (`struct Elf64_Sym` in `elf.h`), which describes the symbolic name and type for particular file offsets or addresses, among other things. The static symbol table may not be present if the binary is stripped, for example.
+  - `SHT_STRTAB` for string tables
+    - String tables simply contain an array of NULL-terminated strings, with the first byte in the string table set to NULL by convention
+  - Sections with type `SHT_REL` or `SHT_RELA` are important for the linker (static linking purposes) b/c they contain relocation entries in a well-defined format (`struct Elf64_Rel` and `struct Elf64_Rela` in `elf.h`), which the linker can parse to perform the relocations in other sections
+  - Sections with type `SHT_DYNAMIC` contain info for dynamic linking (`struct Elf64_Dyn` in `elf.h`)
+
+#### `sh_flags`
+
+- Section flags: additional info. Most important flags: `SHF_WRITE`, `SHF_ALLOC`, and `SHT_EXECINSTR`
+- `SHF_WRITE`: section is **writable at runtime**
+- `SHF_ALLOC`: contents of the section are to be loaded into virtual mem when executing the binary (though the actual loading happens using the segment view of the bin)
+- `SHT_EXECINSTR`: section contains executable instructions
+
+#### `sh_addr`, `sh_offset`, and `sh_size`
+
+- Virtual address, file offset (in bytes), and size (in bytes) of the section, respectively
+- When `sh_addr` is set to zero: this section is not intended to be loaded into virtual mem
+
+#### `sh_link`
+
+- Relationships between sections that the linker needs to know about. E.g., an `SHT_SYMTAB`, `SHT_DYNSYM`, or `SHT_DYNAMIC` has an associated string table section, which contains the symbolic names for the symbols in question. Similarly, relocation sections are associated with a symbol table describing the symbols involved in the relocations
+- The `sh_link` field denotes the index in the section header table of the related section
+
+#### `sh_info`
+
+- Additional info. The meaning of the info varies depending on the section type. E.g., for reloc. sections, `sh_info` denotes the index of the section to which the relocations are to be applied
+
+#### `sh_addralign`
+
+- Some sections need to be aligned in mem for efficiency of mem access. E.g., loaded at some address that is a multiple of 8 or 16 bytes, set `sh_addralign` to 8 and 16, respectively
+- Values 0 and 1: no special alignment needs
+
+#### `sh_entsize`
+
+- Some sections, such as symbol tables or relocation tables, contain a table of data structures. For such sections, the `sh_entsize` field indicates the size (in bytes) of each entry in the table
+- Set to zero when not used
+
 ### Sections
 
+
+
 #### Program Headers
+
 
