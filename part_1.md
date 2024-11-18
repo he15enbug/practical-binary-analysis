@@ -351,6 +351,17 @@
   - `.got` is for refs to data items.
   - `.got.plt` is for storing resolved addresses for lib functions accessed via the PLT.
 
+#### The `.rela.*` Sections
+
+- The `.rela.*` sections, with type `SHT_RELA`, contain info used by the linker for performing relocations
+  - Each section of type `SHT_RELA` is a table of relocation entries, with each entry detailing a particular addr. where a reloc. needs to be applied, as well as instructions on how to resolve the particular value that needs to be plugged in at this addr.
+- Example types of relocs
+  - `R_X86_64_GLOB_DAT`: has its offset in `.got`. Generally, this type of reloc. is used to compute the address of a data symbol and plug it into the correct offset in `.got`.
+  - `R_X86_64_JUMP_SLO`: this type of entries are called *jump slots*, which have their offset in the `.got.plt` section and represent slots where the addr. of lib funcs can be plugged in. Each of these slots is used by one of the PLT stubs to retrieve its indirect jump target.
+  - For more, refer to the ELF specification.
+  -  All reloc. types specify an offset at which to apply the reloc. How to compute the value to plug in at that offset differ per reloc. type.
+
+
 #### Program Headers
 
 
