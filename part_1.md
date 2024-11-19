@@ -420,12 +420,29 @@
 
 #### `p_type`
 
-
+- `p_type` identifies the type of the segment. Important values:
+  - `PT_LOAD`: segments that are intended to be loaded into memory when setting up the process. The *size* of the loadable chunk and the *address* to load it at are described in the rest of the program header. Usually at least 2 `PT_LOAD` segments, one encompassing the nonwritable sections and one containing the writable data sections.
+  - `PT_DYNAMIC`: contains the `.dynamic` section, which tells the interpreter how to parse and prepare the bin for execution.
+  - `PT_INTERP`: contains the `.interp` section, which provides the name of interpreter that is to be used to load the binary.
+  - `PT_PHDR`: encompasses the program header table.
 
 #### `p_flags`
 
-
+- The flags specify the **runtime access permissions** for the segment. Three important types of flags exist: 
+  - `PF_X` (executable, set for code segments, `readelf` display it as an `E` rather than `X`)
+  - `PF_W` (writable, normally set only for writable data segments)
+  - `PF_R` (readable)
 
 #### `p_offset`, `p_vaddr`, `p_paddr`, `p_filesz`, and `p_memsz`
 
+- The `p_offset`, `p_vaddr`, and `p_filesz` fields are analogous to the `sh_{offset, addr, size}` fields in a section header. They specify the *file offset* at which the segment starts, the *virtual address* at which it is to be loaded, and the *file size* of the segment, respectively. For loadable segments, `p_addr` must be equal to `p_offset`, modulo the *page size* (typically 4096 bytes).
+- On some systems, use `p_paddr` to specify at which address in **physical memory** to load the segment. On modern OS such as Linux, this field is unused and set to zero since they execute all binaries in virtual memory.
+- `p_filesz` and `p_memsz` are different: some sections only indicate the need to allocate some bytes in memory, but don't actually occupy these bytes in the bin file. E.g., `.bss` section contains zero-initialized data. Since all data in this section is known to be zero, there's no need to actually include all these zeros in the file. However, when loading the segment containing `.bss` into virtual memory, all the bytes in `.bss` should be allocated. Thus, it's possible for `p_memsz` to be larger than `p_filesz`. When this happens, the loader adds the extra bytes **at the end of the segment** when loading and zero-initializing.
 
+#### `p_align`
+
+- This field is analogous to `sh_addralign` in a section header. An alignment value of 0 or 1 indicates that no alignment is required. If not 0 or 1, the value must be a power of 2, and `p_vaddr` must be equal to `p_offset`, modulo `p_align`.
+
+### Summary
+
+- Exercises
