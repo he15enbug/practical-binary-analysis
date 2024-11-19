@@ -359,8 +359,39 @@
   - `R_X86_64_GLOB_DAT`: has its offset in `.got`. Generally, this type of reloc. is used to compute the address of a data symbol and plug it into the correct offset in `.got`.
   - `R_X86_64_JUMP_SLO`: this type of entries are called *jump slots*, which have their offset in the `.got.plt` section and represent slots where the addr. of lib funcs can be plugged in. Each of these slots is used by one of the PLT stubs to retrieve its indirect jump target.
   - For more, refer to the ELF specification.
-  -  All reloc. types specify an offset at which to apply the reloc. How to compute the value to plug in at that offset differ per reloc. type.
+  - All reloc. types specify an offset at which to apply the reloc. How to compute the value to plug in at that offset differ per reloc. type.
 
+#### The `.dynamic` Section
+
+- A road map for the OS and dynamic linker when loading and setting up an ELF bin for execution.
+- Contains a table of `Elf64_Dyn` structures (in `/usr/include/elf.h`), also referred to as *tags*. There are different types of tags, each of which comes with an associated value
+
+    ```c
+    typedef struct {
+        Elf64_Sxword d_tag;		/* entry tag value */
+        union {
+            Elf64_Xword d_val;
+            Elf64_Addr d_ptr;
+        } d_un;
+    } Elf64_Dyn;
+    ```
+
+- `readelf --dynamic a.out`
+- Example types
+  - `DT_NEEDED`: info about dependencies of the executable, e.g., the example binary uses the `puts` function from the `libc.so.6` shared library, so it needs to be loaded when executing the binary.
+  - `DT_VERNEED` and `DT_VERNEEDNUM` tags specify the starting address and number of entries of the *version dependency table*, which indicates the expected version of the various dependencies of the executable.
+- In addition to listing dependencies, the `.dynamic` section also contains pointers to other info required by the dynamic linker (e.g., the dynamic string table, dynamic symbol table, `.got.plt` section, and dynamic relocation section pointed to by tags of type `DT_STRTAB`, `DT_SYMTAB`, `DT_PLTGOT`, and `DT_RELA`, respectively).
+
+
+#### The `.init_array` and `.fini_array` Sections
+
+- `.init_array`: an array of pointers to functions to use as constructors. Each of these funcs is called in turn when the bin is initialized, before `main` is called
+  - While the aforementioned `.init` contains a **single** startup function that performs some crucial init, `.init_array` is a **data section** that can contain as many function pointers as we want, including pointers to our own custom constructors. (In `gcc`, make functions in C source files as constructors by decorating them with `__attribute__((constructor))`).
+- `.fini_array` is analogous to `.init_array`, except that `.fini_array` contains pointers to destructors.
+- `.init_array` and `.fini_array` are convenient places to insert hooks that add initialization or finalization code to the binary to modify its behavior.
+- Note that bins produced by older `gcc` versions may contain sections called `.ctors` and `.dtors` instead of `.init_array` and `.fini_array`.
+
+#### The `.shstrtab`, `.symtab`, `.strtab`, `.dynsym`, and `.dynstr` Sections
 
 #### Program Headers
 
