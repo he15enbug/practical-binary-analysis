@@ -165,7 +165,7 @@
     +---------+ 15
     ```
 
-- `EI_CLASS`: denotes whether the binary	is for a 32-bit (value: `ELFCLASS32` (`1`)) or 64-bit (value: `ELFCLASS64` (`2`)) architecture
+- `EI_CLASS`: denotes whether the binary is for a 32-bit (value: `ELFCLASS32` (`1`)) or 64-bit (value: `ELFCLASS64` (`2`)) architecture
 - `EI_DATA`: indicates the endianness of the binary:
   - Little-endian: `ELFDATA2LSB` (`1`)
   - Big-endian: `ELFDATA2MSB` (`2`)
@@ -229,16 +229,16 @@
 
   ```c
   typedef struct elf64_shdr {
-    Elf64_Word sh_name;		/* Section name, index in string tbl */
-    Elf64_Word sh_type;		/* Type of section */
-    Elf64_Xword sh_flags;		/* Miscellaneous section attributes */
-    Elf64_Addr sh_addr;		/* Section virtual addr at execution */
-    Elf64_Off sh_offset;		/* Section file offset */
-    Elf64_Xword sh_size;		/* Size of section in bytes */
-    Elf64_Word sh_link;		/* Index of another section */
-    Elf64_Word sh_info;		/* Additional section information */
-    Elf64_Xword sh_addralign;	/* Section alignment */
-    Elf64_Xword sh_entsize;	/* Entry size if section holds table */
+    Elf64_Word sh_name;        /* Section name, index in string tbl */
+    Elf64_Word sh_type;        /* Type of section */
+    Elf64_Xword sh_flags;        /* Miscellaneous section attributes */
+    Elf64_Addr sh_addr;        /* Section virtual addr at execution */
+    Elf64_Off sh_offset;        /* Section file offset */
+    Elf64_Xword sh_size;        /* Size of section in bytes */
+    Elf64_Word sh_link;        /* Index of another section */
+    Elf64_Word sh_info;        /* Additional section information */
+    Elf64_Xword sh_addralign;    /* Section alignment */
+    Elf64_Xword sh_entsize;    /* Entry size if section holds table */
   } Elf64_Shdr;
   ```
 
@@ -368,7 +368,7 @@
 
     ```c
     typedef struct {
-        Elf64_Sxword d_tag;		/* entry tag value */
+        Elf64_Sxword d_tag;        /* entry tag value */
         union {
             Elf64_Xword d_val;
             Elf64_Addr d_ptr;
@@ -393,6 +393,39 @@
 
 #### The `.shstrtab`, `.symtab`, `.strtab`, `.dynsym`, and `.dynstr` Sections
 
-#### Program Headers
+- `.shstrtab`: an array of NULL-terminated strings that contains the names of all sections. It's indexed by the section headers to allow tools like `readelf` to find out the names of the sections
+- `.symtab`: a symbol table (of `Elf64_Sym` structures), each of which assocates a symbolic name with a piece of code or data elsewhere in the binary, such as a function or a variable. The actual strings containing the symbolic names are located in the `.strtab` section. In stripped binaries, `.symtab` and `.strtab` are removed.
+- `.dynsym` and `.dynstr` are analogous to `.symtab` and `.strtab`, except that they contain symbols and strings needed for dynamic linking rather than static linking. Cannot be stripped.
+
+### Program Headers
+
+- The *program header table* provides a **seg,emt view** of the binary, as opposed to the section view provided by the section header table.
+- An ELF segment encompasses zero or more sections, bundling these into a single chunk. The program header table encodes the segment view using program headers of type `struct Elf64_Phdr`
+
+    ```c
+    typedef struct {
+        uint32_t p_type;      /* Segment type */
+        uint32_t p_flags;     /* Segment flags */
+        uint64_t p_offset;        /* Segment file offset */
+        uint64_t p_vaddr;        /* Segment virtual address */
+
+        uint64_t p_paddr;        /* Segment physical address */
+        uint64_t p_filesz;        /* Segment size in file */
+        uint64_t p_memsz;        /* Segment size in memory */
+        uint64_t p_align;        /* Segment alignment, file & memory */
+    } Elf64_Phdr;
+    ```
+
+- Show program headers and section to segment mapping: `readelf --wide --segments a.out`
+
+#### `p_type`
+
+
+
+#### `p_flags`
+
+
+
+#### `p_offset`, `p_vaddr`, `p_paddr`, `p_filesz`, and `p_memsz`
 
 
