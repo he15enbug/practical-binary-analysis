@@ -446,3 +446,66 @@
 ### Summary
 
 - Exercises
+
+## Chapter 3: The PE Format: A Brief Introduction
+
+- The *Portable Executable* (PE) format
+- Main binary format used on Windows
+- PE is a modified version of the *Common Object File Format* (COFF), which was also used on Unix-based systems before being replaced by ELF. For this historical reason, PE is sometimes also referred to as PE/COFF
+- Confusingly, the 64-bit version of PE is called PE32+, because PE32+ has only minor differences compared to the original PE format
+- Refer to `WinNT.h`, which is included in the Microsoft Windows Software Developer Kit
+
+### The MS-DOS Header and MS-DOS Stub
+
+- One of the main differences to ELF is the presence of an MS-DOS header. For backward compatibility.
+- With an MS-DOS header, a PE binary can also be interpreted as an MS-DOS binary, at least in a limited sense.
+- The main function of the MS-DOS header is to describe how to load and execute an MS-DOS stub, which comes right after the MS-DOS header. This stub is usually just a small MS-DOS program, which is run instead of the main program when the user executes a PE binary in MSDOS.
+- tHE MS-DOS stub program typically prints a string like "This program cannot be run in DOS mode" and then exits. However, in principle, it can be a full-fledged MS-DOS version of the program!
+- The MS-DOS header starts with a magic value, which consists of the ASCII characters "MZ". For this reason, it is also sometimes referred to as an MZ header.
+- Another important field in the header is the last field, `e_lfanew`. It contains the file offset at which the real PE binary begins. Thus, when a PE-aware program loader opens the binary, it can read the MS-DOS header and then skip past it and the MS-DOS stub to go right to the start of the PE headers.
+
+### The PE Signature, File Header, and Optional Header
+
+- We can consider the PE headers analogous to ELF's executable header, except that in PE, the "executable header" is split into three parts: a 32-bit signature, a PE file header, and a PE optional header.
+- A `struct` called `IMAGE_NT_HEADERS64` encompasses all three of these parts.
+
+#### The PE Signature
+
+- Simply a string containing the ASCII characters "PE", followed by 2 NULL characters (zero bytes). It's analogous to the magic bytes in the `e_ident` field in ELF's executable header.
+
+#### The PE File Header
+
+- The most important fields: 
+  - `Machine` (use value of `0x8664` for x86-64)
+  - `NumberOfSections` (# of headers in the section header table)
+  - `SizeOfOptionalHeader`
+  - `Characteristics` (contains flags describing things such as the endianness of the bin, whether it is a DLL, and whether it has been stripped)
+- The two fields describing the symbol table are deprecated, and PE files should no longer make use of embedded symbols and debugging info. Instead, these symbols are optionally emitted as part of a separate debugging file.
+
+#### The PE Optional Header
+
+- Despite the name suggests, the PE optional header is not really optional for executables (though it might be missing in object files)
+- Most important fields:
+  - A 16-bit (2 bytes) magic value `0x020b` for 64-bit PE files
+  - Several fields describing the major and minor version number of the linker, and the minimal OS version needed to run the binary
+  - `ImageBase`: describes the address at which to load the binary (PE binaries are designed to be loaded at a specific virtual address)
+  - Other pointer fields contain *relative virtual addresses (RAVs)*, which are intended to be added to the base address. E.g., the `BaseOfCode` field specifies the base address of the code sections (**as an RVA**). So, we can find the base virtual address of the code sections by computing `ImageBase + BaseOfCode`
+  - `AddressOfEntryPoint`: the entry point address of the bin, also specified as an RVA
+  - The `DataDirectory` array: contains entries of a `struct` type called `IMAGE_DATA_DIRECTORY`, which contains an RVA and a size. Every entry in the array descirbes the starting RVA and size of an important portion of the bin. 
+    - The precise interpretation of the entry depends on its index in the array. 
+      - The most important entries are the one at index 0, which describes the base RVA and size of the *export directory* (basically a table of exported functions)
+      - The entry at index 1 describes the *import directory*
+      - The entry at index 5 describes the relocaton table
+    - `DataDirectory` serves as a shortcut for the loader, allowing it to quickly look up particular portions of data without having to iterate through the section header table.
+
+### The Section Header Table
+
+
+
+### Sections
+
+
+
+### Summary
+
+- Exercises
