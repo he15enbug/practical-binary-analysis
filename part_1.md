@@ -500,12 +500,39 @@
 
 ### The Section Header Table
 
-
+- Analogous to ELF's section header table
+- An array of `IMAGE_SECTION_HEADER` structures, each of which describes a single section, denoting the size in the file and in memory (`SizeOfRawData` and `VirtualSize`), its file offset and virtual address (`PointerToRawData` and `VirtualAddress`), relocation info, and any flags (`Characteristics`). Among other things, the flags describe whether the section is executable, readable, writable, or some combination of these. Instead of referring to a string table as ELF section headers do, PE section headers specify the section name using a simple character array field, aptly called `Name`. Because the array is only 8 bytes long, PE section names are limited to 8 characters
+- Unlike ELF, the PE format doesn't explicitly distinguish between sections and segments. The closest thing PE files have to ELF's execution view is the `DataDirectory`, which provides the loader with a shortcut to certain portions of the binary needed for setting up the execution. Other than that, there is no separate program header table. The section header table is used for both linking and loading.
 
 ### Sections
 
+- Many of the sections are directly comparable to ELF sections, often having (almost) the same name
+  - `.text`: code
+  - `.data`: r/w data
+  - `.rdata`: read-only data. **Note that PE compilers like Visual Studio sometimes place read-only data in the `.text` section (mixed in with the code) instead of in .rdata.** Can be problematic during disassembly, b/c it makes it possible to accidentally interpret constant data as instructions
+  - `.bss`: zero-initialized data
+  - `.reloc`: relocation information
 
+#### `.edata` and `.idata`
+
+- The most important sections, with no direct equivalent in ELF
+- Contain tables of exported and imported functions, respectively
+  - `.idata`: symbols (functions and data) the binary imports from shared libs, or DLLs in Windows terminology
+  - `.edata`: symbols and addresses that the bin exports
+- The export directory and import directory entries in the `DataDirectory` array refer to these sections
+- To resolve references to external symbols, the loader needs to match up the required imports with the export table of the DLL that provides the required symbols
+- When `.edata` and `.idata` are not present in the binary, they're usually merged into `.rdata`
+- When the loader resolves dependencies, it writes the resolved addresses into the *Import Address Table (IAT)*. Similarly to the GOT in ELF, the IAT is simply a table of resolved pointers with one slot per pointer. The IAT is also part of the `.idata` section, and it initially contains pointers to the names or identifying numbers of the symbols to be imported. The dynamic loader then replaces these pointers with pointers to the actual imported functions or variables. A call to a lib function is then implemented as a call to a *thunk* for that function, which is nothing more than an indirect jump through the IAT slot for the function
+
+#### Padding in PE Code Section
+
+- When disassembling PE files, there are lots of `int3` instructions. VS emits these instructions as padding (instead of the `nop` instruction used by `gcc`) to align functions and blocks of code in memory such that they can be accessed efficiently
+- The `int3` instruction is normally used by debuggers to set breakpoints, it causes the program to trap to the debugger or to crash if no debugger is present. This is okay for padding code since padding instructions are not intended to be executed
 
 ### Summary
 
 - Exercises
+
+## Chapter 4: Building A Binary Loader Using `libbfd`
+
+
