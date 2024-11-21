@@ -535,4 +535,12 @@
 
 ## Chapter 4: Building A Binary Loader Using `libbfd`
 
+### What Is `libbfd`
+
+- **The Binary File Descriptor library (`libbfd`)** provides a common interface for reading and parsing all popular binary formats, compiled for a wide variety of architectures. This includes ELF and PE files for x86 and x86-64 machines
+- `libbfd` is part of the `binutils-dev` package
+- The core `libbfd` API is in `/usr/include/bfd.h`
+
+### A Simple Binary-Loading Interface
+
 
