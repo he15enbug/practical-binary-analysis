@@ -84,3 +84,5 @@ class Binary {
 
 int load_binary(std::string &fname, Binary *bin, Binary::BinaryType type);
 void unload_binary(Binary *bin);
+
+#endif  /* LOADER_H */
