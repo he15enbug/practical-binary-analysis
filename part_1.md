@@ -636,3 +636,106 @@
     
     #endif  /* LOADER_H */
     ```
+
+- The `Binary` class is the "root" class, representing an abstraction of the entire binary. It contains a `vector` of `Section` objects and a `vector` of `Symbol` objects.
+- The whole API centers around two functions:
+  1. `load_binary` takes the name of a binary file to load (`fname`), a pointer to a `Binary` object to contain the loaded binary (`bin`), and a descriptor of the binary type `type`. It loads the requested binary into the `bin` parameter and returns an integer value of 0 if the loading process was successful or a value less than 0 if it was not successful.
+  2. `unload_binary` simply takes a pointer to a previously loaded `Binary` object and unloads it.
+
+#### The `Binary` Class
+
+- Contains the binary's filename, type, architecture, bit width, entry point address, and sections and symbols
+- The binary type has a dual representation: the `type` member contains a numeric type identifier, while `type_str` contains a string representation of the binary type. The same kind of dual representation is used for architecture
+- `BIN_TYPE_AUTO`: pass to the `load_binary` function to ask it to automatically determine whether the binary is an ELF or PE file.
+- `ARCH_X86`: includes both x86 and x86-64. The distinction between the two is made by the `bits` member of the `Binary` class, which is set to 32 bits for x86 and to 64 bits for x86-64
+- `get_text_section`: iterates over the `sections` vector to look up and return the `.text` section
+
+#### The `Section` Class
+
+- A simple wrapper around the main props of a section (name, type, starting addr. (`vma`), size in bytes, and raw bytes contained in the section)
+- For convenience, there is also a pointer back to the `Binary` that contains the `Section` object
+- `contains` function: takes a code or data address and returns a `bool` indicating whether the address is part of the section
+
+#### The `Symbol` Class
+
+- Binaries contain symbols for many types of components, including local and global variables, functions, relocation expressions, objects, and more. To keep things simple, the loader interface exposes only one kind of symbol: function symbols. These are especially useful because they enable us to easily implement function-level binary analysis tools when function symbols are available
+- The `Symbol` class contains symbol type (`enum SymbolType`, the only valid value of `SYM_TYPE_FUNC`). In addition, the class contains the symbolic name and the start address of the function described by the symbol
+
+### Implementing the Binary Loader
+
+- Use `libbfd` to implement the binary loader
+- The `libbfd` functions all start with `bfd_` (there are also functions that end with `_bfd`, but they are functions defined by the loader). All programs that use `libbfd` must include `bfd.h`, and link against `libbfd` by specifying the linker flag `-lbfd`. In addition to `bfd.h`, the loader includes the header file that contains the interface created in the previous section
+- Load and unload functions `inc/loader.cc` (continued)
+
+    ```cpp
+
+    int load_binary(std::string &fname, Binary *bin, Binary::BinaryType type) {
+        return load_binary_bfd(fname, bin, type);
+    }
+
+    void unload_binary(Binary *bin) {
+        size_t i;
+        Section *sec;
+
+        for(i = 0; i < bin->sections.size(); i++) {
+            sec = &bin->sections[i];
+            if(sec->bytes) {
+                free(sec->bytes);
+            }
+        }
+    }
+
+    ```
+
+- Only `bytes` member of each `Section` is allocated dynamically (using `malloc`)
+
+#### Initializing `libbfd` and Opening a Binary
+
+- The code to open a binary (`open_bfd`), `inc/loader.cc` (continued)
+
+    ```cpp
+
+    static bfd* open_bfd(std::string &fname) {
+        static int bfd_inited = 0;
+        bdf *bfd_h;
+
+        if(!bfd_inited) {
+            bfd_init();
+            bfd_inited = 1;
+        }
+
+        bfd_h = bfd_openr(fname.c_str(), NULL);
+
+        if(!bfd_h) {
+            fprintf(stderr, "failed to open binary '%s' (%s)\n", fname.c_str(), bfd_errmsg(bfd_get_error()));
+            return NULL;
+        }
+
+        if(!bfd_check_format(bfd_h, bfd_object)) {
+            fprintf(stderr, "file '%s' does not look like an executable (%s)\n", fname.c_str(), bfd_errmsg(bfd_get_error()));
+            return NULL;
+        }
+
+        /* Some versions of bfd_check_format pessimistially set a wrong_format 
+         * error before detecting the format and then neglect to unset it once
+         * the format has been detected. We unset it manually to prevent problems
+         */
+        bfd_set_error(bfd_error_no_error);
+
+        if(bfd_get_flavour(bfd_h) == bfd_target_unknown_flavour) {
+            fprintf(stderr, "unrecognized format for binary '%s' (%s)\n", fname.c_str(), bfd_errmsg(bfd_get_error()));
+            return NULL;
+        }
+
+        return bfd_h;
+    }
+
+    ```
+
+- The `open_bfd` function uses `libbfd` to determine the properties of the binary specified by `fname`, open it, and then return a handle to the binary. Before using `libbfd`, we must call `bfd_init` to initialize `libbfd`'s internal state. This needs to be done only once, so `open_bfd` uses a static variable to keep track of whether the init. has been done already
+- Call `bfd_openr` to open the binary by filename. The second parameter of `bfd_openr` allows us to specify a target (the type of the binary), leaving it to NULL makes `libbfd` to automatically determine the binary type. `bfd_openr` returns a pointer to a file handle of type `bfd`. This is `libbfd`'s root data structure, which we can pass to all other function in `libbfd` to perform operations on the binary. In case of error, `bfd_openr` returns NULL
+- When an error occurs, we can find the type of the most recent error by calling `bfd_get_error`, which returns a `bfd_error_type` object. We can compare it agains predefined error identifiers such as `bfd_error_no_memory` or `bfd_error_invalid_target`
+
+#### Parsing Basic Binary Properties
+
+
