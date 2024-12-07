@@ -814,6 +814,131 @@
 
 #### Loading Symbols
 
+- `load_symbols_bfd` (in `inc/loader.cc`), the function to load the static symbol table
 
+    ```cpp
+
+    static int load_symols_bfd(bfd *bfd_h, Binary *bin) {
+        int ret;
+        long n, nsyms, i;
+        /* In libbfd, symbols are represented by the asymbol structure, which is just a short name for struct bfd_symbol */
+        asymbol **bfd_symtab;
+        Symbol *sym;
+
+        bfd_symtab = NULL;
+
+        /* Tells us how many bytes to allocate to store all symbols */
+        n = bfd_get_symtab_upper_bound(bfd_h);
+
+        if(n < 0) {
+            fprint(stderr, "failed to read symtab (%s)\n", bfd_errmsg(bfd_get_error())));
+            goto fail;
+        }
+        else if(n) {
+            /* Malloc enough space for all symbols */
+            bfd_symtab = (asymbol**) malloc(n);
+            if(!bfd_symtab) {
+                fprint(stderr, "out of memory\n");
+                goto fail;
+            }
+
+            /* Populate the symbol table and return the number of symbols that are placed in the table */
+            nsyms = bfd_canonicalize_symtab(bfd_h, bfd_symtab);
+
+            if(nsyms < 0) {
+                fprint(stderr, "failed to read symtab (%s)\n", bfd_errmsg(bfd_get_error()));
+                goto fail;
+            }
+
+            for(i = 0; i < nsyms; i++) {
+                /* For this binary loader, we are interested only in function symbols */
+                if(bfd_symtab[i]->flags & BSF_FUNCTION) {
+                    bin->symols.push_back(Symbol());
+                    sym = &bin->symbols.back();
+                    sym->type = Symbol::SYM_TYPE_FUNC;
+                    sym->name = std:string(bfd_symtab[i]->name);
+                    /* Get a function symbol's value, which is the start address */
+                    sym->addr = bfd_asymbol_value(bfd_symtab[i]);
+                }
+            }
+        }
+
+        ret = 0;
+        goto cleanup;
+
+        fail:
+        return -1;
+
+        cleanup:
+        if(bfd_symtab) {
+            free(bfd_symtab);
+        }
+        return ret;
+    }
+
+    ```
+
+- For dynamic symbols, the process is almost identical
+
+    ```cpp
+
+    static int load_dynsym_bfd(bfd *bfd_h, Binary *bin) {
+        int ret;
+        long n, nsyms, i;
+        
+        /* The same data structure for both static and dynamic symbols */
+        asymbol **bfd_dynsym;
+        Symbol *sym;
+
+        bfd_dynsym = NULL;
+
+        n = bfd_get_dynamic_symtab_upper_bound(bfd_h);
+
+        if(n < 0) {
+            fprint(stderr, "failed to read dynamic symtab (%s)\n", bfd_errmsg(bfd_get_error())));
+            goto fail;
+        }
+        else if(n) {
+            bfd_dynsym = (asymbol**) malloc(n);
+            if(!bfd_dynsym) {
+                fprint(stderr, "out of memory\n");
+                goto fail;
+            }
+
+            nsyms = bfd_canonicalize_dynamic_symtab(bfd_h, bfd_dynsym);
+
+            if(nsyms < 0) {
+                fprint(stderr, "failed to read symtab (%s)\n", bfd_errmsg(bfd_get_error()));
+                goto fail;
+            }
+
+            for(i = 0; i < nsyms; i++) {
+                
+                if(bfd_dynsym[i]->flags & BSF_FUNCTION) {
+                    bin->symols.push_back(Symbol());
+                    sym = &bin->symbols.back();
+                    sym->type = Symbol::SYM_TYPE_FUNC;
+                    sym->name = std:string(bfd_dynsym[i]->name);
+                    sym->addr = bfd_asymbol_value(bfd_dynsym[i]);
+                }
+            }
+        }
+
+        ret = 0;
+        goto cleanup;
+
+        fail:
+        return -1;
+
+        cleanup:
+        if(bfd_symtab) {
+            free(bfd_symtab);
+        }
+        return ret;
+    }
+
+    ```
 
 #### Loading Sections
+
+
