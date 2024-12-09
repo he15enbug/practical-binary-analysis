@@ -9,7 +9,7 @@
 
 #include <bfd.h>
 
-#include "./loader.h"
+#include "../inc/loader.h"
 
 
 int load_binary(std::string &fname, Binary *bin, Binary::BinaryType type) {
