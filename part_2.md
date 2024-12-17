@@ -53,4 +53,40 @@
 
 ### Parsing Symbols with `nm`
 
+- C++ allows functions to be overloaded, but the linker doesn't know anything about C++. E.g., if there are multiple functions with the name `foo`, the linker has no idea how to resolve references to `foo`. To eliminate duplicate names, C++ compilers emit *mangled* function names. A mangled name is essentially a combination of the original function name and an encoding of its parameters
+- Mangled names are relatively easy to *demangle*. We can use `nm`, which lists symbols in a given binary, object file, or shared object
+- `nm -D <FILE_NAME>`: parse the dynamic symbol table
+- Demangle symbol names: `nm -D --demangle lib5ae9b7f.so`
+- The function names appear human-readable. Some interesting functions, which appear to be cryptographic functions implementing the **RC4** encryption algorithm
+
+    ```cpp
+    rc4_decrypt(rc4_state_t*, unsigned char*, int)
+    rc4_decrypt(
+        rc4_state_t*, 
+        std::__cxx11::basic_string<
+            char, 
+            std::char_traits<char>, 
+            std::allocator<char> >&)
+    rc4_encrypt(rc4_state_t*, unsigned char*, int)
+    rc4_encrypt(
+        rc4_state_t*, 
+        std::__cxx11::basic_string<
+            char, 
+            std::char_traits<char>, 
+            std::allocator<char> >&)
+    rc4_init(rc4_state_t*, unsigned char*, int)
+    ```
+- The first parameter of `rc4_init` is presumably a data structure where the cryptographic state is kept, while the next two are probably a string representing a key and an integer specifying the length of the key
+- An alternative way of demangling function names is to use a specialized utility called `c++filt`, which takes a mangled name as the input and outputs the demangled equivalent. `c++filt` supports several mangling formats and automatically detects the correct mangling format for the given input
+- Run `ctf`. When running a binary, the linker resolves dependencies by searching a number of standard directories such as `/lib`. Since we extracted `lib5ae9b7f.so` to a non-standard directory, we need to tell the linker to search that directory too by setting an env variable called `LD_LIBRARY_PATH`: 
+    ```shell
+    $ export LD_LIBRARY_PATH=`pwd`
+    $ ./ctf
+    $ echo $?
+    1
+    ```
+- The exit status of `ctf` contained in the `$?` variable is 1, indicating an error. Now we need to bypass the error to reach the flag we're trying to capture
+
+### Looking for Hints with `strings`
+
 
