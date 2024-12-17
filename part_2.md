@@ -36,6 +36,7 @@
     ./ctf
     ./oracle
     ```
+
 - The "BMP" file `67b8601` also contains the `ELF` string, there might be a shared lib hidden within it.
 
 ### Viewing File Contents with `xxd`
@@ -76,17 +77,55 @@
             std::allocator<char> >&)
     rc4_init(rc4_state_t*, unsigned char*, int)
     ```
+
 - The first parameter of `rc4_init` is presumably a data structure where the cryptographic state is kept, while the next two are probably a string representing a key and an integer specifying the length of the key
 - An alternative way of demangling function names is to use a specialized utility called `c++filt`, which takes a mangled name as the input and outputs the demangled equivalent. `c++filt` supports several mangling formats and automatically detects the correct mangling format for the given input
 - Run `ctf`. When running a binary, the linker resolves dependencies by searching a number of standard directories such as `/lib`. Since we extracted `lib5ae9b7f.so` to a non-standard directory, we need to tell the linker to search that directory too by setting an env variable called `LD_LIBRARY_PATH`: 
+
     ```shell
     $ export LD_LIBRARY_PATH=`pwd`
     $ ./ctf
     $ echo $?
     1
     ```
+
 - The exit status of `ctf` contained in the `$?` variable is 1, indicating an error. Now we need to bypass the error to reach the flag we're trying to capture
 
 ### Looking for Hints with `strings`
+
+- Use `strings` to check for strings in a binary (or any other file) on Linux
+- By default, `strings` output all printable strings of 4 characters or more in the given files
+- Options: 
+  - `-d`: print only strings in data sections in a binary
+  - `-n`: specify the minimum string length (that will be printed out, the default value is 4)
+- Strings that might be useful
+
+    ```
+    ...
+    DEBUG: argv[1] = %s
+    checking '%s'
+    show_me_the_flag
+    ...
+    It's kinda like Louisiana. Or Dagobah. Dagobah - Where Yoda lives!
+    ...
+    ```
+
+- From the debug message, we can know that the binary may expect a command line option, and then it performs some sort of checks on an input string. Try any arbitrary string: we still get an error
+
+    ```shell
+    $ ./ctf hello
+    checking 'hello'
+    $ echo $?
+    1
+    $ ./ctf show_me_the_flag
+    checking 'show_me_the_flag'
+    ok
+    $ echo $?
+    1
+    ```
+
+- When we use `show_me_the_flag`, the check appears to succeed as it prints out `ok`, but the exit status is still 1, there must be something else missing. To take a more detail look at `ctf`'s behavior, trace the system and lib calls it makes
+
+### Tracing System Calls and Library Calls with `strace` and `ltrace`
 
 
