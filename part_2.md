@@ -128,4 +128,28 @@
 
 ### Tracing System Calls and Library Calls with `strace` and `ltrace`
 
+- Investigate the reason that `ctf` exits with an error code by looking at its behavior just before exits. Use `strace` and `ltrace`, which show the system calls and library calls, respectively, executed by a binary.
+- In some cases, we need to attach `strace` to a running process, use `-p <PID>` option.
+- `strace ./ctf show_me_the_flag`
+- When tracing a program from the start, `strace` includes all the system calls used by the program interpreter to set up the process, making the ouput quite verbose
+- The first system call in the output is `execve`, which is called by the shell to launch the program
+- After that, the program interpreter takes over and starts setting up the execution env. This involves setting up memory regions and setting the correct memory access permissions using `mprotect`. Additionally, there are system called used to look up and load the required dynamic libs
+- Since we set `LD_LIBRARY_PATH` to the current working directory, the dynamic linker will search for the `lib5ae9b7f.so` in a number of **standard subfolders in our current working directory** util it finally finds the lib in the root of the current working directory. Then, the dynamic linker reads it and maps it into memory. The setup process is repeated for other required libs
+- The last 3 sys calls are application-specific behavior. The first sys call used by `ctf` itself is `write`, which is used to print `checking 'show_me_the_flag'`. Another `write`, which prints `ok`. Finally, there's a call to `exit_group`, which leads to the exit with status code 1
+- In this case, `strace` didn't reveal anything helpful. Try library calls
+- Use `ltrace` with `-i` option to print the instruction pointer at every lib call, `-C` option to automatically demangle C++ function names: `ltrace -i -C ./ctf show_me_the_flag`
+- We can see something new: the RC4 cryptography is initialized through a call to `rc4_init`. After that, there is an `assign` to a C++ string, presumably initializing it with an encrypted message. This message is then decrypted with a call to `rc4_decrypt`, and the decrypted message is assigned to a new C++ string. Finally, there's a call to `getenv`, which is a standard lib function used to look up env variables. `ctf` expects an env variable called `GUESSME`. The name of this var may well be the string that was decrypted earlier. Try a dummy value for this env variable
+
+    ```shell
+    $ GUESSME='hello' ./ctf show_me_the_flag
+    checking 'show_me_the_flag'
+    ok
+    guess again!    
+    ```
+
+- It seems that `ctf` expects `GUESSME` to be set to another specific value. Use another `ltrace`
+- After calling `getenv`, `ctf` goes on to `assign` and `decrypt` another C++ string. Unfortunately, between the decryption and the moment that `guess again` is printed, we don't see any hints regarding the expected value of `GUESSME`. This tells us the comparison of `GUESSME` to its expected value is implemented without the use of any lib functions. We'll need to examining instruction-level behavior of `ctf`
+
+### Examining Instruction-Level Behavior Using `objdump`
+
 
