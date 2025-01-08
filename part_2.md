@@ -152,4 +152,19 @@
 
 ### Examining Instruction-Level Behavior Using `objdump`
 
+- Since we know that the value of the `GUESSME` env variable is checked without using any lib functions, a logical next step is to use `objdump` to examine `ctf` at the instruction level to find out what's going on
+- From the `ltrace` output, we know that `guess again` string is printed by a call to `puts` at address `0x400dd7`, focus the `objdump` investigation around this address. It will also help to know the address of the string to find the first instruction that loads it, look at the `.rodata` section using `objdump -s --section .rodata ctf` (`-s`: display full contents of sections requested)
+- Find the address of the string `guess again` by looking at the `.rodata` section: `objdump -s --section .rodata ctf`. The address is `0x4011af`
+- Now, look at the instructions around the `puts` call 
 
+    ```
+    $ objdump -d ctf
+    400dc0: movzx edx, BYTE PTR [rbx+rax*1]
+    400dc4: test dl, dl
+    400dc6: je 400dcd <----- The failure case is reached from a loop
+    400dc8: cmp dl, BYTE PTR [rcx+rax*1]
+    400dcb: je 400de0 <_Unwind_Resume@plt+0x240>
+    400dcd: mov edi, 0x4011af <----- the string is loaded
+    400dd2: call 400ab0 <puts@plt>
+    ...
+    ```
