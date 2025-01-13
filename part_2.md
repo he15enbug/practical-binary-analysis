@@ -178,4 +178,24 @@
 ### Dumping a Dynamic String Buffer Using `gdb`
 
 - `gdb`, the GNU Debugger
-- [More info](http://www.gnu.org/software/gdb/documentation/)
+- [An extensive manual covering all the supported `gdb` commands](http://www.gnu.org/software/gdb/documentation/)
+- Run `ctf` with `gdb` from the start, and then:
+  1. `b *0x400dc8`: set a break point at `0x400dc8` (or somewhere around, ensure that the address of the expected value is already loaded to `rcx`)
+  2. `set env GUESSME=abc`: set environment variable `GUESSME`
+  3. `run show_me_the_flag`: start `ctf` with a parameter `show_me_the_flag`
+  4. `info registers rcx`: check the address stored in `rcx`, it's `0x615050`
+  5. `x/s 0x615050`: print the string at `0x615050`, the expected string is `Crackers Don't Matter`
+- Get the flag
+
+    ```shell
+    $ export GUESSME="Crackers Don't Matter"
+    $ ./ctf show_me_the_flag
+    checking 'show_me_the_flag'
+    ok
+    flag = 84b34c124b2ba5ca224af8e33b077e9e
+    ```
+- Tips: do not trust any quotes you typed in the given VM
+
+### Another challenge
+
+
