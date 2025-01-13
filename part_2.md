@@ -160,11 +160,22 @@
     ```
     $ objdump -d ctf
     400dc0: movzx edx, BYTE PTR [rbx+rax*1]
-    400dc4: test dl, dl
+    400dc4: test dl, dl <------ Check the end of the input
     400dc6: je 400dcd <----- The failure case is reached from a loop
-    400dc8: cmp dl, BYTE PTR [rcx+rax*1]
+    400dc8: cmp dl, BYTE PTR [rcx+rax*1] <------ Compare the input to the answer
     400dcb: je 400de0 <_Unwind_Resume@plt+0x240>
     400dcd: mov edi, 0x4011af <----- the string is loaded
     400dd2: call 400ab0 <puts@plt>
     ...
+    400de0: add rax, 0x1
+    400de4: cmp rax, 0x15 <---- The length of the correct string is 0x15
+    400de8: 75 d6 jne 400dc0 <_Unwind_Resume@plt+0x220>
+    ...
     ```
+
+- The base address of the expected string is stored at `rcx`. Since this string is decrypted at runtime, and is not available statically, we'll need to use dynamic analysis to recover it
+
+### Dumping a Dynamic String Buffer Using `gdb`
+
+- `gdb`, the GNU Debugger
+- [More info](http://www.gnu.org/software/gdb/documentation/)
