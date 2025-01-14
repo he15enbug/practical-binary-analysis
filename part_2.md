@@ -198,4 +198,42 @@
 
 ### Another challenge
 
+- Feed the flag to another program in this directory, 'oracle', to unlock the next challenge
+- And there is a hint from the oracle: `Combine the parts`
+- I'll do this later
 
+## Chapter 6: Disassembly and Binary Analysis Fundamentals
+
+- The goal of this chapter is to get familiar with the main algorithms behind disassembly and learn what disassemblers can and cannot do
+- A recommended guid to reverse engineering: *Chris Eagle's The IDA Pro Book (No Starch Press, 2011)*
+
+### Static Disassembly
+
+- Disassembly usually means *static disassembly*. In contrast, *dynamic disassembly*, more commonly known as *execution tracing*, logs each executed instruction as the binary runs
+- Static disassemblers need to perform the following steps:
+  1. Load a binary for processing using a binary loader
+  2. Find all the machine instructions in the binary
+  3. Disassemble these instructions into a human- or machine-readable form
+- Step 2 is often very difficult in practice, resulting in disassembly errors
+- There are 2 major approaches to static disassembly, each of which tries to avoid disassembly errors in its own way:
+  1. *linear disassembly*
+  2. *recursive disassembly*
+- Unfortunately, neither approach is perfect in every case
+
+#### Linear Disassembly
+
+
+
+#### Recursive Disassembly
+
+
+
+### Dynamic Disassembly
+
+
+
+### Structuring Disassembled Code and Data
+
+
+
+### 
