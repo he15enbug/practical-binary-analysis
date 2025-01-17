@@ -222,7 +222,15 @@
 
 #### Linear Disassembly
 
-
+- Conceptually the simplest approach
+- Iterate through all code segments in a binary, decoding all bytes consecutively and parsing them into a list of instructions
+- Many simple disassemblers, including `objdump`, use this approach
+- The risk: not all bytes may be instructions. E.g., some compilers, such as Visual Studio, intersperse data such as jump tables with the code, without leaving any clues as to where exactly that data is
+- *Disassembler Desynchronization*
+- On `x86`, the disassembled instruction stream tends to automatically resynchronize itself just a few instructions
+- It's safe to use `objdump` for disassembling ELF binaries compiled with recent versions of compilers such as `gcc` or LLVM's `clang`. The `x86` versions of these compilers don't typically emit inline data.
+- Visual Studio does emit inline data, so keep an eye out for disassembly errors when using `objdump` to look at PE binaries. The same it true when analyzing ELF bins for other arch., such as ARM
+- When analyzing malicious code, note that it may include obfuscations far worse than inline data!
 
 #### Recursive Disassembly
 
