@@ -250,6 +250,20 @@
 
 ### Dynamic Disassembly
 
+- Also known as *execution tracers* or *instruction tracers*
+- A rich set of runtime info at its disposal, such as concrete register and memory contents
+- Simply dump instructions (and possibly memory/register contents) as the program executes
+- The main downside is the *code coverage problem*: dynamic disassemblers don't see all instructions but only those they execute
+
+#### Example: Tracing a Binary Execution with `gdb`
+
+- There's no widely accepted standard tool on Linux to do "fire-and-forget" execution tracing (unlike on Windows, where excellent tools such as OllyDbg are available)
+- The easiest way using only standard tools is with a few `gdb` commands
+
+- After loading `/bin/ls` into `gdb`, `info files` shows the binary's entry point address
+
+#### Code Coverage Strategies
+
 
 
 ### Structuring Disassembled Code and Data
