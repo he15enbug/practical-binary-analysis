@@ -234,7 +234,19 @@
 
 #### Recursive Disassembly
 
+- Recursive disassembly is sensitive to control flow
+- Starts from known entry points into the binary, e.g., the main entry point and exported function symbols
+- Follows control flow (e.g., jumps and calls) to discover code
+- Can work around data bytes in all but a handful of corner cases
+- Downside: not all control flow is easy to follow. May miss blocks of code
+- Recursive disassembly is the de facto standard in many rev-engineering applications, such as malware analysis
+- IDA (*Interactive DisAssembler*) Pro is one of the most advanced and widely used recursive disassemblers
 
+- Jump table is commonly emitted by modern compilers to avoid the need for a complicated tangle of conditional jumps. 
+- While efficient, jump tables make recursive disassembly more difficult because they use **indirect control flow**
+- Any instructions that the indirect jump may target remain undiscovered unless the disassembler implements specific (compiler-dependent) heuristics to discover and parse jump tables
+
+- In the case where disassembly correctness is paramount, even at the expense of completeness, we can use **dynamic disassembly**
 
 ### Dynamic Disassembly
 
