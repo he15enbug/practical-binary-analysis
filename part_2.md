@@ -264,10 +264,33 @@
 
 #### Code Coverage Strategies
 
+- Code coverage problem
+- Many malware samples even try to actively hide from dynamic analysis tools or debuggers like `gdb`
+  - Virtually all such tools produce some kind of detectable artifact in the environment; 
+  - If nothing else, the analysis inevitably slows down execution, typically enough to be detectable. 
+  - Malware detects these artifacts and hides its true behavior if it knows it's being analyzed
+    - To enable dynamic analysis on these samples, we must reverse engineer and then disable the malware's anti-analysis checks
+    - These anti-analysis tricks are the reason why it's usually a good idea to at least augment our dynamic analysis with static analysis methods
+- There are several methods to improve the coverage of dynamic analysis tools, though in general none of them achieves the level of completeness provided by static analysis.
 
+##### Test Suites
+
+- Run the binary with *known test inputs*
+- Downside: a ready-made test suite isn't always available, for instance, for proprietary software or malware
+
+##### Fuzzing
+
+- *Fuzzers* try to automatically generate inputs to cover new code paths in a given binary
+- Well-knwon fuzzers include AFL, Microsoft's Project Springfield, and Google's OSS-Fuzz
+- Broadly speaking, fuzzers fall into 2 categories based on the way they generate inputs:
+  1. Gneration-based fuzzers: generate inputs from scratch (possibly with knowledge of the expected input format)
+  2. Mutation-based fuzzers: generate new inputs by mutating known valid inputs in some way, for instance, starting from an existing test suite
+
+##### Symbolic Execution
+
+- Symbolic execution allows us to execute an application not with *concrete values*, but with *symbolic values*
+- A symbolic execution is essentially an emulation of a program, where all or some of the variables (or register and memory states) are represented using such symbols
 
 ### Structuring Disassembled Code and Data
-
-
 
 ### 
