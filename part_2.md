@@ -290,7 +290,16 @@
 
 - Symbolic execution allows us to execute an application not with *concrete values*, but with *symbolic values*
 - A symbolic execution is essentially an emulation of a program, where all or some of the variables (or register and memory states) are represented using such symbols
+- *Path constraints*, restrictions on the concrete values that the symbols could take
+- Given the list of path constraints, we can check whether there's any concrete input that would satisfy all these constraints
+- There are special programs, called **Constraint Solvers**, that check, given a list of constraints, whether there's any way to satisfy these constraints
 
 ### Structuring Disassembled Code and Data
 
-### 
+- Most disassemblers structure the disassembled code in some way that's easier to analyze
+
+#### Structuring Code
+
+- Various ways of structuring disassembled code
+  1. Compartmentalizing
+  2. Revealing control flow
