@@ -303,3 +303,41 @@
 - Various ways of structuring disassembled code
   1. Compartmentalizing
   2. Revealing control flow
+
+##### Functions
+
+- In most high-level programming languages, functions are the Fundamental building blocks used to group logically connected pieces of code
+- *Function detection*: recover the original program's function structure and use it to group disassembled instructions by function
+- For binaries with symbolic info, function detection is trivial
+- *Overlapping code blocks*: chunks of code that is shared between functions
+- In practice, most disassemblers make the assumption that functions are contiguous and don't share code
+  - Not true in some cases, especially for **firmware** or **code for embedded systems**
+- The predominant strategy is based on *function signatures*, which are patterns of instructions often used at the start or end of a function
+  - Used in all well-known recursive disassemblers
+  - Function signature patterns include:
+    - Well-known *function prologues*: instructions used to set up the function's stack frame
+
+      ```assembly
+      Example of x86 function prologue
+      push ebp;
+      move ebp, esp;
+      ```
+
+    - Well-known *function epilogues*: instructions used to tear down the stack frame
+
+      ```assembly
+      Example of x86 function epilogue
+      leave;
+      ret;
+      ```
+
+- signature-based function detection algorithm:
+  1. pass over the disassembled binary to locate functions that are directly addressed by a `call` instruction
+  2. For functions that are called indirectly or tail-called, consult a database of known function signatures
+- Be wary of errors: in practice, function patterns vary depending on the platform, compiler, and optimization level used to create the binary
+- Optimized functions may not have well-known prologues or epilogues
+- Some research explores methods based on the structure of code. The approach has been integrated into Binary Ninja, and the research prototype tool can interoperate with IDA Pro
+
+###### Function Detection Using the `.eh_frame` section
+
+- An interesting alternative approach for ELF bins is based on the `.eh_frame` section, which we can use to circumvent the function detection problem entirely
