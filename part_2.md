@@ -338,6 +338,23 @@
 - Optimized functions may not have well-known prologues or epilogues
 - Some research explores methods based on the structure of code. The approach has been integrated into Binary Ninja, and the research prototype tool can interoperate with IDA Pro
 
-###### Function Detection Using the `.eh_frame` section
+##### Function Detection Using the `.eh_frame` section
 
 - An interesting alternative approach for ELF bins is based on the `.eh_frame` section, which we can use to circumvent the function detection problem entirely
+- The `.eh_frame` section contains info related to DWARF-based debugging features such as stack unwinding
+  - This includes function boundary info that identifies all functions in the binary
+  - The info is present even in stripped binaries, unless the binary was compiled with `gcc`'s `-fno-asynchronous-unwind-tables` flag
+  - Present by default not only in C++ bins that use exception handling but in all bins produced by `gcc`, including plain C bins
+
+##### Control-Flow Graphs
+
+- Some funcs are large, analyzing even one func can be a complex task
+- To organize the internals of each function, use a *control-flow graph (CFG)*
+- CFGs offer a convenient graphical representation of the code structure
+- CFGs represent the code inside a func as a set of code blocks, called *basic blocks*, connected by *branch edges*
+- A basic block is a sequence of instructions where the first instruction is the only entry point, and the last instruction is the only exit point
+- An edge in the CFG from a basic block B to another basic block C means that the last instruction in B may jump to the start of C
+
+##### Call Graphs
+
+
