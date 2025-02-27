@@ -354,7 +354,34 @@
 - CFGs represent the code inside a func as a set of code blocks, called *basic blocks*, connected by *branch edges*
 - A basic block is a sequence of instructions where the first instruction is the only entry point, and the last instruction is the only exit point
 - An edge in the CFG from a basic block B to another basic block C means that the last instruction in B may jump to the start of C
+- Call edges are not part of a CFG because they target code outside of the function
+- Instead, CFG shows only the **"fallthrough" edge** that points to the instruction where control will return after the function call completes
+- Indirect edges are often omitted
+- Disassemblers also sometimes define a global CFG, it is called an **interprocedural** CFG (ICFG) since it's the union of all per-function CFGs
+- ICFGs avoid the need for error-prone func detection but don't offer the compartmentalization benefits that per-func CFGs have
 
 ##### Call Graphs
+
+- A *call graph* is designed to represent the edges between call instructions and functions
+- *Address-taken functions*: functions that have their address taken anywhere in the code
+- It's nice to know which functions are address-taken because this tells us they might be called **indirectly**
+
+##### Object-Oriented Code
+
+- Many binary analysis tools, including fully featured disassemblers like IDA Pro, are targeted at programs written in *procedural languages* like C
+- Object-oriented languages like C++ structure code using *classes* that group logically connected functions and data
+- Unfortunately, current binary analysis tools lack the ability to recover class hierarchies and exception-handling structures
+- C++ programs often contain function pointers because of the way virtual methods are typically implemented
+- *Virtual methods* are class methods that are allowed to be overriden in a derived class
+- When compiling, the compiler may not know whether a pointer will point to a base class or a derived class at runtime
+  - Cannot statically determine which implementation of a virtual method should be used at runtime
+  - To solve this, compilers emits tables of function pointers, called *vtables*, that contain pointers to all the virtual functions of a particular class
+    - Vtables usually in read-only memory
+    - Each polymorphic object has a pointer (*vptr*) to the vtable for the object's type
+    - To invoke a virtual method, the compiler emits code that follows the object's vptr at runtime and directly calls the correct entry in its vtable
+    - Control flow more difficult to follow
+- In case of automated analysis, we can simply pretend classes don't exist
+
+### Structuring Data
 
 
