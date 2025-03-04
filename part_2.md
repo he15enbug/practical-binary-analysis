@@ -384,4 +384,16 @@
 
 ### Structuring Data
 
+- Automatic data structure detection in stripped binaries is a notoriously difficult problem
+  - Aside from some research work, disassemblers generally don't even attempt it
+- Some exceptions. E.g., if a reference to a data object is passed to a well-known function, such as a lib func, disassemblers like IDA Pro can automatically infer that data type based on the spec. of the lib func
 
+### Decompilation
+
+- *Decompilers* are tools that attempt to "reverse the compilation process"
+  - Typically start from disassembled code and translate it into a higher-level language
+- Decompilation process is too error-prone to serve as a reliable basis for any automated analysis
+
+### Intermediate Representations
+
+- *IR, Intermediate Representations*, aka. intermediate languages
