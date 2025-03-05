@@ -397,3 +397,26 @@
 ### Intermediate Representations
 
 - *IR, Intermediate Representations*, aka. intermediate languages
+- Instruction sets like x86 and ARM contain many different instructions with complex semantics
+  - For instance, on x86, even seemingly simple instructions like `add` have side effects, such as setting status flags in the `eflags` register
+  - The sheer number of instructions and side effects makes it difficult to reason about binary programs in an automated way
+    - E.g., dynamic taint analysis and symbolic execution engines must implement explicit handlers that capture the data-flow semantics of all the instructions they analyze
+      - Accurately implementing all these handlers is a daunting task
+- IRs are designed to remove this burden
+- An IR is a simple language that serves as an abstraction from low-level machine languages
+- Popular IRs include *REIL (Reverse Engineering Intermediate Language)* and *VEX IR* (the IR used in the *valgrind* instrumentation framework)
+- There's even a tool called *McSema* that translates bin into LLVM bitcode (aka. LLVM IR)
+- The idea of IR languages is to automatically translate real machine code, such as x86 code, into an IR that captures all of the machcine code's semantics but is much simpler to analyze
+  - REIL contains only 17 different instructions
+  - Languages like REIL, VEX and LLVM IR explicitly express all operations, with no obscure instruction side effects
+- The trade-off of translating a complex instruction set to a simple IR language is that IR languages are **far less concise**
+  - Not an issue for automated analyses
+  - Make IR hard to read for humans
+
+## Fundamental Analysis methods
+
+- A few "standard" analyses
+
+### Binary Analysis Properties
+
+
