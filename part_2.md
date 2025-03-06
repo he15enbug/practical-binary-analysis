@@ -419,4 +419,16 @@
 
 ### Binary Analysis Properties
 
+- Classify different analysis techniques based on some of the different properties that any binary analysis approach can have
+
+#### Interprocedural and Intraprocedural Analysis
+
+- It's not computationally feasible to analyze every possible path through a nontrivial program
+- That's why computationally expensive binary analyses are often *intraprocedural*
+  - Consider the code only within a single function at a time
+  - Analyze the CFG of each func in turn
+  - Downside: it's not complete. Some bugs are triggered by a specific combination of functions
+- In contrast, *interprocedural* analysis considers an entire program as a whole, typically by linking all the function CFGs together via the call graph
+
+#### Flow-Sensitivity
 
