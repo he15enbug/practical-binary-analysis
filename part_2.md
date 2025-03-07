@@ -432,3 +432,33 @@
 
 #### Flow-Sensitivity
 
+- *Flow-sensitive* vs. *flow-insensitive*
+- Flow-sensitive: the analysis takes the order of the instructions into account
+- E.g., a *value set analysis* on `x`
+
+  ```C
+  x = unsigned_int(argv[0]) // 1. x [0,]
+  x = x + 5                 // 2. x [5,]
+  x = x + 10                // 3. x [15,]
+  ```
+
+- For flow-insensitive analysis, `x` can contain any (unsigned integer) value since it gets its value from user input
+- For flow-sensitive analysis, it provides an estimate of `x`'s possible value set at each point in the program, taking into the previous instruction
+- Flow-sensitive analyses tend to be much more complex and more computationally intensive
+
+#### Context-Sensitivity
+
+- *Context-sensitivity* takes the order of function invocations into account
+- Meaningful only for Interprocedural analyses
+- A context-insensitive interprocedural analysis computes a single, global result
+- A context-sensitive analysis computes a separate result for each possible path through the call graph
+- The context of the analysis is the state accrued while traversing the call graph
+  - Usually limited, because very large contexts make flow-sensitive analysis too computationally expensive
+  - For instance, the analysis may only compute results for contexts of 5 consecutive functions
+- Not feasible to create a scalable context-sensitive version of an analysis without restoring to cost and benefit trade-offs such as limiting the context size
+
+### Control-Flow Analysis
+
+#### Loop Detection
+
+
