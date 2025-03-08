@@ -461,4 +461,23 @@
 
 #### Loop Detection
 
+- A common type of control-flow analysis
+- Find loops in the code
+- Loop detection algorithms used in compilers look for *natural loops*, which are loops that have certain well-formedness properties that make them easier to analyze and optimize
+- There are also algorithms that detect any *cycle* in a CFG
+- *Dominance tree*
+- In a CFG, a basic block A is said to *dominate* another block B if the only way to get to B from the entry point of the CFG is to go through A first
+- A natural loop is induced by a *back edge* from a basic block B to A, where A dominates B
+  - The loop resulting from this back edge contains all basic blocks dominated by A from which there is a path to B
+  - Conventionally, B itself is excluded from this set
+  - This definition means that natural loops cannot be entered somewhere in the middle but only at a well-defined *header node*
+
+#### Cycle Detection
+
+- Simply start a depth-first search (DFS) from the entry node of the CFG
+
+### Data-Flow Analysis
+
+#### Reaching Defintions Analysis
+
 
