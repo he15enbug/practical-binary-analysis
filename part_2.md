@@ -501,4 +501,18 @@
 
 ### Effects of Compiler Settings on Disassembly
 
+- Optimized code is usually harder to accurately disassemble
+- *Inlining*: merge small funcs into the larger functions calling them
+- *Link-time optimization (LTO)*
+- Binaries are often compiled as *position-independent code (PIC)* to accommodate security features like *ASLR, address-space layout randomization*, which need to be able to move code and data around w/o breaking the binary
+  - Bins compiled with PIC are called *position-independent code (PIEs)*
+  - PIEs don't use absolute addresses to reference code and data
+    - Use reference relative to the program counter
+
+### Summary
+
+- Exercises
+
+## Simple Code Injection techniques For ELF
+
 
