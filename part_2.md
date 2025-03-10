@@ -480,4 +480,25 @@
 
 #### Reaching Defintions Analysis
 
+- *Reaching definition analysis* answers this question: which data definitions can reach this point in the program
+  - I.e., a value assigned to a variable (or register or memory location at a lower level) can reach that point without the value being overwritten by another assignment in the meantime
+  - Usually applied at the CFG level
+  - Though can also be used interprocedurally
+- Forms the basis for many data-flow analyses, including *use-def analysis*
+
+#### Use-Def Chains
+
+- *Use-def chains* tell us, at each point in the program where a variable is used, where the variable may have been defined
+- One instance where use-def chains come in handy is *decompilation*
+  - Track where a value used in a conditional jump was compared
+- Also used in compiler optimizations such as *constant propagation*
+
+#### Program Slicing
+
+- *Slicing* is a data-flow analysis that aims to extract all instructions (or, for source-based analysis, lines of code) that contribute to the value of a chosen set of variables at a certain point in the program (called the *slicing criterion*)
+- *Backward slicing*
+- *Forward slicing*
+
+### Effects of Compiler Settings on Disassembly
+
 
